@@ -51,6 +51,7 @@ export default function App() {
     selectedFine,
     setSelectedFine,
     finesFilters,
+    setFinesFilters,
   } = useAppContext();
 
   const [history, setHistory] =
@@ -181,6 +182,7 @@ export default function App() {
     filters
   ) => {
     setNavFilters(filters);
+    setFinesFilters(filters);
     setPage("fines");
   };
 
