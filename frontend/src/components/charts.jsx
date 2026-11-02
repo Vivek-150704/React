@@ -57,30 +57,6 @@ export function StatusDistribution({ records = [], data: apiData }) {
         </div>)}
     </Card>);
 }
-export function StatusAmountChart({ records }) {
-    const data = aggregateStatuses(records);
-    return (<Card className="chart-card">
-      <div className="card-heading">
-        <div>
-          <h2>Fine Amount by Status</h2>
-          <p>Recorded financial amount in USD.</p>
-        </div>
-      </div>
-      {!records.length ? (<EmptyState />) : (<div className="chart">
-          <ResponsiveContainer>
-            <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
-              <XAxis type="number" tickFormatter={(v) => `$${Math.round(v / 1000)}k`} tickLine={false}/>
-              <YAxis type="category" dataKey="status" width={64} tickLine={false} axisLine={false}/>
-              <Tooltip formatter={(v) => money(Number(v))} contentStyle={tooltipStyle}/>
-              <Bar dataKey="amount" radius={[0, 5, 5, 0]} barSize={24}>
-                {data.map((row) => (<Cell key={row.status} fill={colors[row.status]}/>))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>)}
-    </Card>);
-}
 export function ReasonsChart({ records = [], data: apiData, onSelect, }) {
     const [metric, setMetric] = useState("amount");
     const [top, setTop] = useState(5);
