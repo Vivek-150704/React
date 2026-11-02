@@ -2,8 +2,14 @@ import { apiRequest } from "./api";
 import { authService } from "./authService";
 
 class DashboardService {
-  async kpis() {
-    return apiRequest("/api/dashboard/kpis", {
+  async kpis(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && key !== "reasons") params.set(key, value);
+    });
+    (filters.reasons || []).forEach((reason) => params.append("reason", reason));
+    const query = params.toString();
+    return apiRequest(`/api/dashboard/kpis${query ? `?${query}` : ""}`, {
       token: authService.getToken(),
     });
   }
