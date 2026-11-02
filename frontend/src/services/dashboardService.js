@@ -32,17 +32,6 @@ class DashboardService {
     return { status, reasons, trend };
   }
 
-  async reasons() {
-    return apiRequest("/api/dashboard/reasons", {
-      token: authService.getToken(),
-    });
-  }
-
-  async trend() {
-    return apiRequest("/api/dashboard/trend", {
-      token: authService.getToken(),
-    });
-  }
 }
 
 export const dashboardService = new DashboardService();
