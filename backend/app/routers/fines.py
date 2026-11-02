@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -63,7 +63,7 @@ def map_fine(f):
 def get_fines(
     status: str | None = None,
     customerId: str | None = None,
-    reason: str | None = None,
+    reason: list[str] | None = Query(default=None),
     search: str | None = None,
     fromDate: str | None = None,
     toDate: str | None = None,
@@ -83,9 +83,7 @@ def get_fines(
         )
 
     if reason:
-        query = query.filter(
-            Fine.reason_category == reason
-        )
+        query = query.filter(Fine.reason_category.in_(reason))
 
     if search:
         query = query.filter(
