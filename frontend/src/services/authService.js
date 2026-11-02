@@ -5,13 +5,12 @@ const TOKEN_KEY = "mars_access_token";
 const USER_KEY = "mars_user";
 
 export const authService = {
-  async signIn(email, password, requestedRole) {
+  async signIn(email, password) {
     const result = await apiRequest("/api/auth/login", {
       method: "POST",
       body: {
         email: email.trim().toLowerCase(),
         password,
-        requestedRole,
       },
     });
 
