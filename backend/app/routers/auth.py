@@ -103,12 +103,6 @@ def login(
             detail="invalid-credentials"
         )
 
-    if user.role != request.requestedRole:
-        raise HTTPException(
-            status_code=403,
-            detail="wrong-role"
-        )
-
     token = create_access_token(
         user.user_id,
         user.email,
