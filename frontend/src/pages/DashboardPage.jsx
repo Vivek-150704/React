@@ -13,7 +13,6 @@ import { useAppContext } from "../context/AppContext.jsx";
 
 import {
   ReasonsChart,
-  StatusAmountChart,
   StatusDistribution,
   TrendChart,
 } from "../components/charts.jsx";
@@ -25,7 +24,6 @@ import {
   Select,
 } from "../components/ui.jsx";
 
-import { reasons } from "../data/mockData.js";
 
 import {
   filterFines,
@@ -51,6 +49,7 @@ export function DashboardPage({
   const {
     dashboardFilters,
     setDashboardFilters,
+    setFinesFilters,
   } = useAppContext();
 
   const filters = dashboardFilters;
@@ -93,15 +92,15 @@ export function DashboardPage({
   }, [dashboardFilters]);
 
   const applyFilters = () => {
-    setDashboardFilters({
-      ...draftFilters,
-    });
+    setDashboardFilters({ ...draftFilters });
+    setFinesFilters({ ...draftFilters });
   };
 
   const resetFilters = () => {
     setDraftFilters(defaults);
 
     setDashboardFilters(defaults);
+    setFinesFilters(defaults);
 
     setDatePreset("12");
   };
@@ -114,6 +113,8 @@ export function DashboardPage({
       ),
     [records, filters]
   );
+
+  const reasons = [...new Set(records.map((fine) => fine.reasonCategory).filter(Boolean))].sort();
 
   const customers = Array.from(
     new Map(
@@ -391,10 +392,6 @@ export function DashboardPage({
       ) : (
         <div className="chart-grid">
           <StatusDistribution
-            records={filtered}
-          />
-
-          <StatusAmountChart
             records={filtered}
           />
 
