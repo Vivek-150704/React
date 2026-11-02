@@ -1,14 +1,13 @@
 import { useEffect } from "react";
-import { ArrowDown, ArrowUp, Download, FilterX, MoreHorizontal, RefreshCw, } from "lucide-react";
+import { ArrowDown, ArrowUp, FilterX, MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, Card, EmptyState, SearchField, Select, StatusBadge, } from "../components/ui.jsx";
-import { reasons } from "../data/mockData.js";
 import { exactMoney, shortDate } from "../utils/fines.js";
 import {
   useAppContext,
 } from "../context/AppContext.jsx";
 
-export function FinesDetailsPage({ records, role, initialFilters, onOpen, onExport, onRefresh, }) {
+export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
     const {
     finesFilters,
     setFinesFilters,
@@ -46,6 +45,7 @@ const filters =
         direction: "desc",
     });
     const customers = Array.from(new Map(records.map((f) => [f.customerId, f.customerName])));
+    const reasons = [...new Set(records.map((fine) => fine.reasonCategory).filter(Boolean))].sort();
     const filtered = useMemo(
   () =>
     [...records].sort((a, b) => {
@@ -99,16 +99,7 @@ const filters =
       <Card className="records-card sticky-filters records-filters">
         <div className="records-search">
           <SearchField value={draftFilters.search ?? ""} onChange={(search) => update({ search })} placeholder="Search Fine ID, Customer ID, or Order Reference…"/>
-          <div>
-            <Button variant="secondary" onClick={onRefresh}>
-              <RefreshCw size={16}/>
-              Refresh
-            </Button>
-            <Button onClick={() => onExport(filtered, filters)}>
-              <Download size={16}/>
-              Export to Excel
-            </Button>
-          </div>
+
         </div>
         <div className="details-filters">
           <label className="field">

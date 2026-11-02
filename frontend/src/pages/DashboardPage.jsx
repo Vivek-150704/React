@@ -13,7 +13,6 @@ import { useAppContext } from "../context/AppContext.jsx";
 
 import {
   ReasonsChart,
-  StatusAmountChart,
   StatusDistribution,
   TrendChart,
 } from "../components/charts.jsx";
@@ -25,7 +24,6 @@ import {
   Select,
 } from "../components/ui.jsx";
 
-import { reasons } from "../data/mockData.js";
 
 import {
   filterFines,
@@ -51,6 +49,7 @@ export function DashboardPage({
   const {
     dashboardFilters,
     setDashboardFilters,
+    setFinesFilters,
   } = useAppContext();
 
   const filters = dashboardFilters;
@@ -63,6 +62,8 @@ export function DashboardPage({
   const [datePreset, setDatePreset] =
     useState("12");
 
+  const [chartData, setChartData] = useState({ status: [], reasons: [], trend: [] });
+
   const [kpis, setKpis] = useState({
     totalFines: 0,
     totalAmount: 0,
@@ -73,10 +74,12 @@ export function DashboardPage({
   useEffect(() => {
     const loadKpis = async () => {
       try {
-        const data =
-          await dashboardService.kpis();
-
+        const [data, analytics] = await Promise.all([
+          dashboardService.kpis(filters),
+          dashboardService.analytics(filters),
+        ]);
         setKpis(data);
+        setChartData(analytics);
       } catch (error) {
         console.error(
           "Dashboard KPI error:",
@@ -86,22 +89,22 @@ export function DashboardPage({
     };
 
     loadKpis();
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     setDraftFilters(dashboardFilters);
   }, [dashboardFilters]);
 
   const applyFilters = () => {
-    setDashboardFilters({
-      ...draftFilters,
-    });
+    setDashboardFilters({ ...draftFilters });
+    setFinesFilters({ ...draftFilters });
   };
 
   const resetFilters = () => {
     setDraftFilters(defaults);
 
     setDashboardFilters(defaults);
+    setFinesFilters(defaults);
 
     setDatePreset("12");
   };
@@ -114,6 +117,8 @@ export function DashboardPage({
       ),
     [records, filters]
   );
+
+  const reasons = [...new Set(records.map((fine) => fine.reasonCategory).filter(Boolean))].sort();
 
   const customers = Array.from(
     new Map(
@@ -390,15 +395,10 @@ export function DashboardPage({
         </Card>
       ) : (
         <div className="chart-grid">
-          <StatusDistribution
-            records={filtered}
-          />
-
-          <StatusAmountChart
-            records={filtered}
-          />
+          <StatusDistribution data={chartData.status} records={filtered} />
 
           <ReasonsChart
+            data={chartData.reasons}
             records={filtered}
             onSelect={(
               reason
@@ -414,9 +414,7 @@ export function DashboardPage({
             }
           />
 
-          <TrendChart
-            records={filtered}
-          />
+          <TrendChart data={chartData.trend.map((row) => ({ ...row, month: `${row.year}-${String(row.month).padStart(2, "0")}` }))} records={filtered} />
         </div>
       )}
     </>
