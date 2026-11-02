@@ -20,14 +20,8 @@ class ApiFinesService {
       );
     }
 
-    if (
-      filters.reasons &&
-      filters.reasons.length
-    ) {
-      params.append(
-        "reason",
-        filters.reasons[0]
-      );
+    if (filters.reasons?.length) {
+      filters.reasons.forEach((reason) => params.append("reason", reason));
     }
 
     if (filters.search) {
@@ -64,14 +58,6 @@ class ApiFinesService {
         token:
           authService.getToken(),
       }
-    );
-  }
-
-  async refresh(
-    filters = {}
-  ) {
-    return this.list(
-      filters
     );
   }
 
