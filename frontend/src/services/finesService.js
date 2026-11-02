@@ -1,60 +1,122 @@
-import { createMockData } from "../data/mockData.js";
-const pause = (ms = 350) => new Promise((resolve) => setTimeout(resolve, ms));
-class MockFinesService {
-    records;
-    history;
-    constructor() {
-        const data = createMockData();
-        this.records = data.fines;
-        this.history = data.history;
+import { apiRequest } from "./api.js";
+import { authService } from "./authService.js";
+
+class ApiFinesService {
+  async list(filters = {}) {
+    const params =
+      new URLSearchParams();
+
+    if (filters.status) {
+      params.append(
+        "status",
+        filters.status
+      );
     }
-    async list() {
-        await pause();
-        return structuredClone(this.records);
+
+    if (filters.customerId) {
+      params.append(
+        "customerId",
+        filters.customerId
+      );
     }
-    async refresh() {
-        await pause(500);
-        return structuredClone(this.records);
+
+    if (
+      filters.reasons &&
+      filters.reasons.length
+    ) {
+      params.append(
+        "reason",
+        filters.reasons[0]
+      );
     }
-    async reviews(fineId) {
-        await pause(150);
-        return structuredClone(this.history
-            .filter((r) => r.fineId === fineId)
-            .sort((a, b) => b.reviewedAt.localeCompare(a.reviewedAt)));
+
+    if (filters.search) {
+      params.append(
+        "search",
+        filters.search
+      );
     }
-    async review(fineId, request, reviewer) {
-        await pause(700);
-        const index = this.records.findIndex((f) => f.fineId === fineId);
-        if (index < 0)
-            throw new Error("not-found");
-        if (this.records[index].status !== request.expectedStatus)
-            throw new Error("conflict");
-        if (!request.comment.trim())
-            throw new Error("comment-required");
-        const previousStatus = this.records[index].status;
-        const now = new Date().toISOString();
-        const updated = {
-            ...this.records[index],
-            status: request.decision,
-            updatedAt: now,
-            lastReviewedAt: now,
-            lastReviewerName: reviewer.fullName,
-            lastReviewComment: request.comment.trim(),
-        };
-        this.records[index] = updated;
-        this.history.unshift({
-            reviewId: `REV-${Date.now()}`,
-            fineId,
-            oldStatus: previousStatus,
-            newStatus: request.decision,
-            reviewerId: reviewer.id,
-            reviewerName: reviewer.fullName,
-            comment: request.comment.trim(),
-            reviewedAt: now,
-        });
-        return structuredClone(updated);
+
+    if (filters.fromDate) {
+      params.append(
+        "fromDate",
+        filters.fromDate
+      );
     }
+
+    if (filters.toDate) {
+      params.append(
+        "toDate",
+        filters.toDate
+      );
+    }
+
+    const query =
+      params.toString();
+
+    return apiRequest(
+      `/api/fines${
+        query
+          ? `?${query}`
+          : ""
+      }`,
+      {
+        token:
+          authService.getToken(),
+      }
+    );
+  }
+
+  async refresh(
+    filters = {}
+  ) {
+    return this.list(
+      filters
+    );
+  }
+
+  async reviews(
+    fineId
+  ) {
+    return apiRequest(
+      `/api/fines/${encodeURIComponent(
+        fineId
+      )}/reviews`,
+      {
+        token:
+          authService.getToken(),
+      }
+    );
+  }
+
+  async review(
+    fineId,
+    request
+  ) {
+    return apiRequest(
+      `/api/fines/${encodeURIComponent(
+        fineId
+      )}/reviews`,
+      {
+        method: "POST",
+
+        token:
+          authService.getToken(),
+
+        body: {
+          expectedStatus:
+            request.expectedStatus,
+
+          decision:
+            request.decision,
+
+          comment:
+            request.comment,
+        },
+      }
+    );
+  }
 }
-// The UI depends only on this interface. A future ApiFinesService can implement the
-// proposed /api/fines contract without changing page components.
-export const finesService = new MockFinesService();
+
+export const finesService =
+  new ApiFinesService();

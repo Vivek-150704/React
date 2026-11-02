@@ -1,13 +1,44 @@
+import { useEffect } from "react";
 import { ArrowDown, ArrowUp, Download, FilterX, MoreHorizontal, RefreshCw, } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, Card, EmptyState, SearchField, Select, StatusBadge, } from "../components/ui.jsx";
 import { reasons } from "../data/mockData.js";
-import { exactMoney, filterFines, shortDate } from "../utils/fines.js";
+import { exactMoney, shortDate } from "../utils/fines.js";
+import {
+  useAppContext,
+} from "../context/AppContext.jsx";
+
 export function FinesDetailsPage({ records, role, initialFilters, onOpen, onExport, onRefresh, }) {
-    const [filters, setFilters] = useState({
+    const {
+    finesFilters,
+    setFinesFilters,
+} = useAppContext();
+
+const [draftFilters, setDraftFilters] = useState(
+    Object.keys(finesFilters).length
+        ? finesFilters
+        : {
+              reasons: [],
+              ...initialFilters,
+          }
+);
+
+useEffect(() => {
+  if (initialFilters) {
+    setDraftFilters((current) => ({
+      ...current,
+      ...initialFilters,
+    }));
+  }
+}, [initialFilters]);
+
+const filters =
+  Object.keys(finesFilters).length
+    ? finesFilters
+    : {
         reasons: [],
         ...initialFilters,
-    });
+      };
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [sort, setSort] = useState({
@@ -15,23 +46,50 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen, onExpo
         direction: "desc",
     });
     const customers = Array.from(new Map(records.map((f) => [f.customerId, f.customerName])));
-    const filtered = useMemo(() => filterFines(records, filters).sort((a, b) => {
-        const result = sort.field === "fineAmount"
-            ? a.fineAmount - b.fineAmount
-            : a.fineDate.localeCompare(b.fineDate);
-        return sort.direction === "asc" ? result : -result;
-    }), [records, filters, sort]);
+    const filtered = useMemo(
+  () =>
+    [...records].sort((a, b) => {
+      const result =
+        sort.field === "fineAmount"
+          ? a.fineAmount - b.fineAmount
+          : a.fineDate.localeCompare(
+              b.fineDate
+            );
+
+      return sort.direction === "asc"
+        ? result
+        : -result;
+    }),
+  [records, sort]
+);
     const maxPage = Math.max(1, Math.ceil(filtered.length / pageSize));
     const currentPage = Math.min(page, maxPage);
     const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const update = (partial) => {
-        setFilters((f) => ({ ...f, ...partial }));
-        setPage(1);
-    };
+    setDraftFilters((f) => ({
+        ...f,
+        ...partial,
+    }));
+
+    setPage(1);
+};
     const clearFilters = () => {
-        setFilters({ reasons: [] });
-        setPage(1);
+
+    const defaults = {
+        search: "",
+        status: undefined,
+        customerId: undefined,
+        reasons: [],
+        fromDate: "",
+        toDate: "",
     };
+
+    setDraftFilters(defaults);
+
+    setFinesFilters(defaults);
+
+    setPage(1);
+};
     const toggleSort = (field) => setSort((s) => ({
         field,
         direction: s.field === field && s.direction === "desc" ? "asc" : "desc",
@@ -40,7 +98,7 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen, onExpo
     return (<>
       <Card className="records-card sticky-filters records-filters">
         <div className="records-search">
-          <SearchField value={filters.search ?? ""} onChange={(search) => update({ search })} placeholder="Search Fine ID, Customer ID, or Order Reference…"/>
+          <SearchField value={draftFilters.search ?? ""} onChange={(search) => update({ search })} placeholder="Search Fine ID, Customer ID, or Order Reference…"/>
           <div>
             <Button variant="secondary" onClick={onRefresh}>
               <RefreshCw size={16}/>
@@ -55,13 +113,13 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen, onExpo
         <div className="details-filters">
           <label className="field">
             <span>From date</span>
-            <input type="date" value={filters.fromDate ?? ""} onChange={(e) => update({ fromDate: e.target.value || undefined })}/>
+            <input type="date" value={draftFilters.fromDate ?? ""} onChange={(e) => update({ fromDate: e.target.value || undefined })}/>
           </label>
           <label className="field">
             <span>To date</span>
-            <input type="date" value={filters.toDate ?? ""} onChange={(e) => update({ toDate: e.target.value || undefined })}/>
+            <input type="date" value={draftFilters.toDate ?? ""} onChange={(e) => update({ toDate: e.target.value || undefined })}/>
           </label>
-          <Select label="Status" value={filters.status ?? ""} onChange={(e) => update({
+          <Select label="Status" value={draftFilters.status ?? ""} onChange={(e) => update({
             status: e.target.value || undefined,
         })}>
             <option value="">All statuses</option>
@@ -69,37 +127,48 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen, onExpo
             <option>Invalid</option>
             <option>Pending</option>
           </Select>
-          <Select label="Customer" value={filters.customerId ?? ""} onChange={(e) => update({ customerId: e.target.value || undefined })}>
+          <Select label="Customer" value={draftFilters.customerId ?? ""} onChange={(e) => update({ customerId: e.target.value || undefined })}>
             <option value="">All customers</option>
             {customers.map(([id, name]) => (<option key={id} value={id}>
                 {name}
               </option>))}
           </Select>
-          <Select label="Fine reason" value={filters.reasons[0] ?? ""} onChange={(e) => update({ reasons: e.target.value ? [e.target.value] : [] })}>
+          <Select label="Fine reason" value={draftFilters.reasons[0] ?? ""} onChange={(e) => update({ reasons: e.target.value ? [e.target.value] : [] })}>
             <option value="">All reasons</option>
             {reasons.map((reason) => (<option key={reason}>{reason}</option>))}
           </Select>
+          <Button
+  onClick={() => {
+    setFinesFilters({
+      ...draftFilters,
+    });
+
+    setPage(1);
+  }}
+>
+  Apply Filters
+</Button>
           <Button variant="ghost" onClick={clearFilters}>
             <FilterX size={16}/>
             Clear all
           </Button>
         </div>
-        {(filters.status ||
-            filters.customerId ||
-            filters.reasons.length > 0 ||
-            filters.search) && (<div className="filter-chips">
+        {(draftFilters.status ||
+            draftFilters.customerId ||
+            draftFilters.reasons.length > 0 ||
+            draftFilters.search) && (<div className="filter-chips">
             <span>Active filters:</span>
-            {filters.status && (<button onClick={() => update({ status: undefined })}>
-                Status: {filters.status} ×
+            {draftFilters.status && (<button onClick={() => update({ status: undefined })}>
+                Status: {draftFilters.status} ×
               </button>)}
-            {filters.customerId && (<button onClick={() => update({ customerId: undefined })}>
-                Customer: {filters.customerId} ×
+            {draftFilters.customerId && (<button onClick={() => update({ customerId: undefined })}>
+                Customer: {draftFilters.customerId} ×
               </button>)}
-            {filters.reasons.map((reason) => (<button key={reason} onClick={() => update({ reasons: [] })}>
+            {draftFilters.reasons.map((reason) => (<button key={reason} onClick={() => update({ reasons: [] })}>
                 {reason} ×
               </button>))}
-            {filters.search && (<button onClick={() => update({ search: "" })}>
-                Search: “{filters.search}” ×
+            {draftFilters.search && (<button onClick={() => update({ search: "" })}>
+                Search: “{draftFilters.search}” ×
               </button>)}
           </div>)}
       </Card>
