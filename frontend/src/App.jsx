@@ -4,7 +4,6 @@ import { useAppContext } from "./context/AppContext.jsx";
 
 import {
   FineDrawer,
-  ExportModal,
   ReviewModal,
 } from "./components/FinePanels.jsx";
 
@@ -23,7 +22,6 @@ import { FinesDetailsPage } from "./pages/FinesDetailsPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { SignUpPage } from "./pages/SignUpPage.jsx";
 
-import { shortDate } from "./utils/fines.js";
 import { can } from "./services/permissions.js";
 
 export default function App() {
@@ -59,9 +57,6 @@ export default function App() {
     useState([]);
 
   const [reviewing, setReviewing] =
-    useState(null);
-
-  const [exportState, setExportState] =
     useState(null);
 
   const [toast, setToast] =
@@ -110,26 +105,6 @@ export default function App() {
     };
   }, [user, finesFilters]);
 
-  useEffect(() => {
-  let active = true;
-
-  if (!user) {
-    return;
-  }
-
-  finesService
-    .list(finesFilters)
-    .then((data) => {
-      if (active) {
-        setRecords(data);
-      }
-    })
-    .catch(console.error);
-
-  return () => {
-    active = false;
-  };
-}, [user, finesFilters]);
 
   useEffect(() => {
     if (!toast) return;
@@ -141,36 +116,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const refresh = async () => {
-    setLoading(true);
-
-    try {
-      const data =
-        await finesService.refresh(
-          finesFilters
-        );
-
-      setRecords(data);
-
-      setToast({
-        message:
-          "Fine records refreshed successfully.",
-      });
-    } catch (error) {
-      console.error(
-        "Refresh error:",
-        error
-      );
-
-      setToast({
-        message:
-          "Unable to load fine records.",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openFine = (
     fine,
@@ -239,86 +184,6 @@ export default function App() {
     setPage("fines");
   };
 
-  const exportWorkbook =
-    async () => {
-      if (!exportState)
-        return;
-
-      try {
-        const XLSX =
-          await import(
-            "xlsx"
-          );
-
-        const rows =
-          exportState.records.map(
-            (fine) => ({
-              "Fine ID":
-                fine.fineId,
-              "Customer ID":
-                fine.customerId,
-              Customer:
-                fine.customerName,
-              "Order Reference":
-                fine.orderReference,
-              "Fine Date":
-                fine.fineDate
-                  ? new Date(
-                      fine.fineDate
-                    )
-                  : "",
-              "Fine Amount":
-                fine.fineAmount,
-              Currency:
-                fine.currencyCode,
-              "Fine Reason":
-                fine.reasonCategory,
-              Status:
-                fine.status,
-            })
-          );
-
-        const sheet =
-          XLSX.utils.json_to_sheet(
-            rows
-          );
-
-        const book =
-          XLSX.utils.book_new();
-
-        XLSX.utils.book_append_sheet(
-          book,
-          sheet,
-          "Fine Records"
-        );
-
-        XLSX.writeFile(
-          book,
-          `fines_export_${new Date()
-            .toISOString()
-            .slice(
-              0,
-              10
-            )}.xlsx`
-        );
-
-        setExportState(null);
-
-        setToast({
-          message:
-            "Export completed successfully.",
-        });
-      } catch (error) {
-        console.error(error);
-
-        setToast({
-          message:
-            "Export failed.",
-          type:
-            "error",
-        });
-      }
-    };
 
   const handleLogout =
     () => {
@@ -339,10 +204,6 @@ export default function App() {
       setHistory([]);
 
       setReviewing(
-        null
-      );
-
-      setExportState(
         null
       );
     };
@@ -429,21 +290,6 @@ export default function App() {
           onOpen={
             openFine
           }
-          onRefresh={
-            refresh
-          }
-          onExport={(
-            fines,
-            filters
-          ) =>
-            setExportState(
-              {
-                records:
-                  fines,
-                filters,
-              }
-            )
-          }
         />
       )}
 
@@ -490,26 +336,6 @@ export default function App() {
         />
       )}
 
-      {exportState && (
-        <ExportModal
-          count={
-            exportState
-              .records
-              .length
-          }
-          filters={
-            exportState.filters
-          }
-          onClose={() =>
-            setExportState(
-              null
-            )
-          }
-          onExport={
-            exportWorkbook
-          }
-        />
-      )}
 
       {toast && (
         <Toast
