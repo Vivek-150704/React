@@ -118,11 +118,17 @@ export default function App() {
   }, [toast]);
 
 
-  const openFine = (
+  const openFine = async (
     fine,
     review = false
   ) => {
     setSelectedFine(fine);
+    try {
+      setHistory(await finesService.reviews(fine.fineId));
+    } catch (error) {
+      console.error("Fine review history error:", error);
+      setHistory([]);
+    }
 
     if (
       review &&
