@@ -14,16 +14,22 @@ class DashboardService {
     });
   }
 
-  async statusDistribution() {
-    return apiRequest("/api/dashboard/status-distribution", {
-      token: authService.getToken(),
+  async analytics(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && key !== "reasons") params.set(key, value);
     });
-  }
-
-  async statusAmount() {
-    return apiRequest("/api/dashboard/status-amount", {
-      token: authService.getToken(),
-    });
+    (filters.reasons || []).forEach((reason) => params.append("reason", reason));
+    const query = params.toString();
+    const suffix = query ? `?${query}` : "";
+    const token = authService.getToken();
+    const options = { token };
+    const [status, reasons, trend] = await Promise.all([
+      apiRequest(`/api/dashboard/status-distribution${suffix}`, options),
+      apiRequest(`/api/dashboard/reasons${suffix}`, options),
+      apiRequest(`/api/dashboard/trend${suffix}`, options),
+    ]);
+    return { status, reasons, trend };
   }
 
   async reasons() {
