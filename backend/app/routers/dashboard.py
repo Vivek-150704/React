@@ -49,9 +49,10 @@ def status_distribution(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
 ):
     rows = filtered_query(db, **filter_args(status, customerId, reason, search, fromDate, toDate)).with_entities(
-        Fine.status, func.count(Fine.fine_id).label("count")
+        Fine.status, func.count(Fine.fine_id).label("count"),
+        func.sum(Fine.fine_amount).label("amount")
     ).group_by(Fine.status).all()
-    return [{"status": row[0], "count": row[1]} for row in rows]
+    return [{"status": row[0], "count": row[1], "amount": float(row[2] or 0)} for row in rows]
 
 
 @router.get("/reasons")
