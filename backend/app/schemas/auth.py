@@ -13,7 +13,6 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-    requestedRole: str
 
 class DecisionRequest(BaseModel):
     decision: str
