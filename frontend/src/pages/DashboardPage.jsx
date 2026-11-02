@@ -73,7 +73,7 @@ export function DashboardPage({
     const loadKpis = async () => {
       try {
         const data =
-          await dashboardService.kpis();
+          await dashboardService.kpis(filters);
 
         setKpis(data);
       } catch (error) {
@@ -85,7 +85,7 @@ export function DashboardPage({
     };
 
     loadKpis();
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     setDraftFilters(dashboardFilters);
