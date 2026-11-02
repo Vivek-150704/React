@@ -125,9 +125,19 @@ def get_requests(
     current_user: User = Depends(require_roles('Admin')),
     db: Session = Depends(get_db)
 ):
-    return db.query(
-        RegistrationRequest
-    ).all()
+    registrations = db.query(RegistrationRequest).order_by(RegistrationRequest.created_at.desc()).all()
+    return [
+        {
+            "id": item.request_id,
+            "fullName": item.full_name,
+            "email": item.email,
+            "requestedRole": item.requested_role,
+            "assignedRole": item.requested_role if item.status == "Approved" else None,
+            "registeredAt": item.created_at.isoformat() if item.created_at else None,
+            "status": "Pending Approval" if item.status == "Pending" else item.status,
+        }
+        for item in registrations
+    ]
 
 @router.patch("/requests/{request_id}")
 def approve_request(
@@ -151,12 +161,14 @@ def approve_request(
         )
 
     if request.decision == "approve":
+        if request.assignedRole not in {"Super User", "Viewer"}:
+            raise HTTPException(status_code=400, detail="invalid-role")
 
         user = User(
             full_name=registration.full_name,
             email=registration.email,
             password_hash=registration.password_hash,
-            role=request.assignedRole or registration.requested_role,
+            role=request.assignedRole,
             status="Approved"
         )
 
@@ -169,6 +181,9 @@ def approve_request(
         return {
             "message": "Approved"
         }
+
+    if request.decision != "reject":
+        raise HTTPException(status_code=400, detail="invalid-decision")
 
     registration.status = "Rejected"
 
