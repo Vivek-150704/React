@@ -192,6 +192,9 @@ def review_fine(
             detail="not-found"
         )
 
+    if request.decision not in {"Valid", "Invalid", "Pending"}:
+        raise HTTPException(status_code=400, detail="invalid-decision")
+
     if fine.status != request.expectedStatus:
         raise HTTPException(
             status_code=409,
