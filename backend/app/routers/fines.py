@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.security import get_current_user, require_roles
+from app.models.user import User
 from app.models.fine import Fine
 from app.models.fine_review import FineReview
 from app.schemas.fine import ReviewRequest
@@ -65,6 +67,7 @@ def get_fines(
     search: str | None = None,
     fromDate: str | None = None,
     toDate: str | None = None,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(Fine)
@@ -100,11 +103,8 @@ def get_fines(
         )
 
     if toDate:
-        query = query.filter(
-            Fine.fine_date <= datetime.fromisoformat(
-                toDate
-            )
-        )
+        end_date = datetime.fromisoformat(toDate) + timedelta(days=1)
+        query = query.filter(Fine.fine_date < end_date)
 
     fines = query.all()
 
@@ -117,6 +117,7 @@ def get_fines(
 @router.get("/{fine_id}")
 def get_fine(
     fine_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     fine = (
@@ -139,6 +140,7 @@ def get_fine(
 @router.get("/{fine_id}/reviews")
 def get_reviews(
     fine_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     reviews = (
@@ -175,6 +177,7 @@ def get_reviews(
 def review_fine(
     fine_id: str,
     request: ReviewRequest,
+    current_user: User = Depends(require_roles('Admin', 'Super User')),
     db: Session = Depends(get_db)
 ):
     fine = (
@@ -201,8 +204,8 @@ def review_fine(
         fine_id=fine_id,
         old_status=fine.status,
         new_status=request.decision,
-        reviewer_user_id=1,
-        reviewer_name="Vivek",
+        reviewer_user_id=current_user.user_id,
+        reviewer_name=current_user.full_name,
         comment=request.comment,
         reviewed_at=datetime.utcnow()
     )
