@@ -3,7 +3,7 @@ from fastapi import Depends
 from app.models.user import User
 from app.schemas.auth import DecisionRequest
 from sqlalchemy.orm import Session
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_roles
 from app.core.database import get_db
 from app.schemas.auth import RegisterRequest
 
@@ -122,6 +122,7 @@ def login(
 
 @router.get("/requests")
 def get_requests(
+    current_user: User = Depends(require_roles('Admin')),
     db: Session = Depends(get_db)
 ):
     return db.query(
@@ -132,6 +133,7 @@ def get_requests(
 def approve_request(
     request_id: int,
     request: DecisionRequest,
+    current_user: User = Depends(require_roles('Admin')),
     db: Session = Depends(get_db)
 ):
     registration = (
@@ -154,8 +156,7 @@ def approve_request(
             full_name=registration.full_name,
             email=registration.email,
             password_hash=registration.password_hash,
-            role=request.assignedRole
-                or registration.requested_role,
+            role=request.assignedRole or registration.requested_role,
             status="Approved"
         )
 
