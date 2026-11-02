@@ -35,6 +35,8 @@ def create_access_token(
     email,
     role,
 ):
+    if not JWT_SECRET:
+        raise HTTPException(status_code=500, detail="server-auth-not-configured")
     payload = {
         "sub": str(user_id),
         "email": email,
@@ -53,6 +55,9 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
+    if not JWT_SECRET:
+        raise HTTPException(status_code=500, detail="server-auth-not-configured")
+
     try:
         payload = jwt.decode(
             credentials.credentials,
