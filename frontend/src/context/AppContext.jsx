@@ -1,8 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-} from "react";
+import { createContext, useContext, useState } from "react";
 
 const AppContext = createContext(null);
 
@@ -23,88 +19,27 @@ const finesDefaults = {
   toDate: "",
 };
 
-export function AppProvider({
-  children,
-}) {
-  const [
-    dashboardFilters,
-    setDashboardFilters,
-  ] = useState(
-    dashboardDefaults
-  );
-
-  const [
-    finesFilters,
-    setFinesFilters,
-  ] = useState(
-    finesDefaults
-  );
-
-  const [
-    selectedFine,
-    setSelectedFine,
-  ] = useState(null);
-
-  const [
-    dashboardData,
-    setDashboardData,
-  ] = useState(null);
-
-  const [
-    finesData,
-    setFinesData,
-  ] = useState([]);
-
-  const resetDashboardFilters =
-    () => {
-      setDashboardFilters(
-        dashboardDefaults
-      );
-    };
-
-  const resetFinesFilters =
-    () => {
-      setFinesFilters(
-        finesDefaults
-      );
-    };
+export function AppProvider({ children }) {
+  const [dashboardFilters, setDashboardFilters] = useState(dashboardDefaults);
+  const [finesFilters, setFinesFilters] = useState(finesDefaults);
+  const [selectedFine, setSelectedFine] = useState(null);
 
   return (
-    <AppContext.Provider
-      value={{
-        dashboardFilters,
-        setDashboardFilters,
-
-        finesFilters,
-        setFinesFilters,
-
-        selectedFine,
-        setSelectedFine,
-
-        dashboardData,
-        setDashboardData,
-
-        finesData,
-        setFinesData,
-
-        resetDashboardFilters,
-        resetFinesFilters,
-      }}
-    >
+    <AppContext.Provider value={{
+      dashboardFilters,
+      setDashboardFilters,
+      finesFilters,
+      setFinesFilters,
+      selectedFine,
+      setSelectedFine,
+    }}>
       {children}
     </AppContext.Provider>
   );
 }
 
 export function useAppContext() {
-  const context =
-    useContext(AppContext);
-
-  if (!context) {
-    throw new Error(
-      "useAppContext must be used inside AppProvider"
-    );
-  }
-
+  const context = useContext(AppContext);
+  if (!context) throw new Error("useAppContext must be used inside AppProvider");
   return context;
 }
