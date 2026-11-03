@@ -115,16 +115,21 @@ export function DashboardPage({
     [records, filters]
   );
 
-  const reasons = [...new Set(records.map((fine) => fine.reasonCategory).filter(Boolean))].sort();
-
-  const customers = Array.from(
-    new Map(
-      records.map((f) => [
-        f.customerId,
-        f.customerName,
-      ])
-    )
+  // Dropdown choices are scoped to the selected date window.
+  const periodRecords = useMemo(
+    () => filterFines(records, {
+      fromDate: draftFilters.fromDate,
+      toDate: draftFilters.toDate,
+      status: undefined,
+      customerId: undefined,
+      reasons: [],
+    }),
+    [records, draftFilters.fromDate, draftFilters.toDate]
   );
+
+  const statuses = [...new Set(periodRecords.map((fine) => fine.status).filter(Boolean))].sort();
+  const reasons = [...new Set(periodRecords.map((fine) => fine.reasonCategory).filter(Boolean))].sort();
+  const customers = Array.from(new Map(periodRecords.map((fine) => [fine.customerId, fine.customerName])));
 
   const updatePreset = (
     preset
@@ -221,17 +226,7 @@ export function DashboardPage({
             All statuses
           </option>
 
-          <option>
-            Valid
-          </option>
-
-          <option>
-            Invalid
-          </option>
-
-          <option>
-            Pending
-          </option>
+          {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
         </Select>
 
         <Select
