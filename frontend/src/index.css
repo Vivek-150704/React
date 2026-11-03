@@ -210,3 +210,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .review-modal .decision-options { grid-template-columns:1fr; }
   .review-modal .review-record { grid-template-columns:1fr 1fr; }
 }
+
+
+/* Nine-column fines table layout after removing currency. */
+.main-table th:nth-child(1),.main-table td:nth-child(1) { width:10% }
+.main-table th:nth-child(2),.main-table td:nth-child(2) { width:12% }
+.main-table th:nth-child(3),.main-table td:nth-child(3) { width:13% }
+.main-table th:nth-child(4),.main-table td:nth-child(4) { width:10% }
+.main-table th:nth-child(5),.main-table td:nth-child(5) { width:12% }
+.main-table th:nth-child(6),.main-table td:nth-child(6) { width:15% }
+.main-table th:nth-child(7),.main-table td:nth-child(7) { width:10% }
+.main-table th:nth-child(8),.main-table td:nth-child(8) { width:10% }
+.main-table th:nth-child(9),.main-table td:nth-child(9) { width:8% }
+.registration-actions { display:flex;align-items:center;gap:6px;min-width:290px; }
+.registration-actions select { height:32px;border:1px solid var(--border);border-radius:6px;padding:0 6px;font-size:10px; }
+.registration-actions .btn { min-height:32px;padding:0 9px;font-size:10px; }
