@@ -10,6 +10,7 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
   const { finesFilters, setFinesFilters } = useAppContext();
   const [draftFilters, setDraftFilters] = useState(() => ({ ...emptyFilters, ...initialFilters, ...finesFilters }));
   const [sort, setSort] = useState({ field: "fineDate", direction: "desc" });
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const customers = Array.from(new Map(records.map((f) => [f.customerId, f.customerName])));
   const reasons = [...new Set(records.map((f) => f.reasonCategory).filter(Boolean))].sort();
 
@@ -22,6 +23,17 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
   }), [records, finesFilters, sort]);
 
   const update = (partial) => setDraftFilters((current) => ({ ...current, ...partial }));
+  const searchText = (draftFilters.search || "").trim().toLowerCase();
+  const suggestions = searchText.length < 2 ? [] : records.filter((fine) =>
+    [fine.fineId, fine.customerId, fine.customerName, fine.orderReference, fine.reasonCategory]
+      .some((value) => String(value || "").toLowerCase().includes(searchText))
+  ).slice(0, 7);
+  const chooseSuggestion = (fine) => {
+    const next = { ...draftFilters, search: fine.fineId };
+    setDraftFilters(next);
+    setFinesFilters(next);
+    setSuggestionsOpen(false);
+  };
   const applyFilters = () => setFinesFilters({ ...draftFilters });
   const clearFilters = () => {
     setDraftFilters(emptyFilters);
@@ -35,8 +47,19 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
 
   return <>
     <Card className="records-card sticky-filters records-filters">
-      <div className="records-search">
-        <SearchField value={draftFilters.search ?? ""} onChange={(search) => update({ search })} placeholder="Search Fine ID, Customer ID, or Order Reference…"/>
+      <div className="records-search search-suggest-wrap">
+        <SearchField value={draftFilters.search ?? ""} onChange={(search) => { update({ search }); setSuggestionsOpen(true); }} placeholder="Search Fine ID, Customer ID, or Order Reference…"/>
+        {suggestionsOpen && searchText.length >= 2 && (
+          <div className="search-suggestions" role="listbox" aria-label="Matching fines">
+            {suggestions.length ? suggestions.map((fine) => (
+              <button type="button" key={fine.fineId} className="search-suggestion" onMouseDown={(event) => event.preventDefault()} onClick={() => chooseSuggestion(fine)}>
+                <span><strong>{fine.fineId}</strong><small>{fine.customerName} · {fine.customerId}</small></span>
+                <span><strong>{fine.orderReference || "No order reference"}</strong><small>{fine.reasonCategory || "Uncategorised"}</small></span>
+                <small className="suggestion-status">{fine.status}</small>
+              </button>
+            )) : <div className="search-no-suggestions">No matching fines found</div>}
+          </div>
+        )}
       </div>
       <div className="details-filters">
         <label className="field"><span>From date</span><input type="date" value={draftFilters.fromDate ?? ""} onChange={(e) => update({ fromDate: e.target.value || undefined })}/></label>
