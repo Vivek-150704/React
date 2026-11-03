@@ -5,6 +5,8 @@ import { Button, Modal } from "./ui.jsx";
 
 export function UserManagementModal({ currentUser, onClose }) {
   const [users, setUsers] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [assignedRoles, setAssignedRoles] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
@@ -13,7 +15,11 @@ export function UserManagementModal({ currentUser, onClose }) {
   const load = async () => {
     setLoading(true);
     setError("");
-    try { setUsers(await authService.users()); }
+    try {
+      const [userRows, requestRows] = await Promise.all([authService.users(), authService.requests()]);
+      setUsers(userRows);
+      setRequests(requestRows);
+    }
     catch (e) { setError(e.message || "Unable to load users."); }
     finally { setLoading(false); }
   };
@@ -31,6 +37,14 @@ export function UserManagementModal({ currentUser, onClose }) {
       await load();
     } catch (e) { setError(e.message || "Unable to create Admin."); }
     finally { setCreating(false); }
+  };
+
+  const decideRequest = async (request, decision) => {
+    setError("");
+    try {
+      await authService.decide(request.id, decision, assignedRoles[request.id] || "Viewer");
+      await load();
+    } catch (e) { setError(e.message || "Unable to update registration request."); }
   };
 
   const remove = async (user) => {
@@ -56,7 +70,16 @@ export function UserManagementModal({ currentUser, onClose }) {
         <div className="admin-create-actions"><Button type="submit" disabled={creating}>{creating ? "Creating…" : "Create Admin"}</Button></div>
       </form>
       {error && <div className="alert error">{error}</div>}
-      <div className="user-management-heading"><div><h3>Existing users</h3><p>{users.length} account(s)</p></div></div>
+      <div className="user-management-heading"><div><h3>Registration requests</h3><p>{requests.filter(r => r.status === "Pending Approval").length} awaiting approval</p></div></div>
+      <div className="table-wrap user-list-table"><table>
+        <thead><tr><th>Name</th><th>Email</th><th>Requested role</th><th>Registered</th><th>Decision</th></tr></thead>
+        <tbody>{requests.filter(r => r.status === "Pending Approval").map(request => <tr key={request.id}>
+          <td>{request.fullName}</td><td>{request.email}</td><td>{request.requestedRole}</td>
+          <td>{request.registeredAt ? new Date(request.registeredAt).toLocaleDateString() : "—"}</td>
+          <td><div className="registration-actions"><select aria-label="Assigned role" value={assignedRoles[request.id] || "Viewer"} onChange={e => setAssignedRoles({...assignedRoles, [request.id]:e.target.value})}><option>Viewer</option><option>Super User</option></select><Button onClick={() => decideRequest(request, "approve")}>Approve</Button><Button variant="danger" onClick={() => decideRequest(request, "reject")}>Reject</Button></div></td>
+        </tr>)}</tbody>
+      </table></div>
+            <div className="user-management-heading"><div><h3>Existing users</h3><p>{users.length} account(s)</p></div></div>
       {loading ? <p>Loading users…</p> : <div className="table-wrap user-list-table"><table>
         <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>{users.map(user => <tr key={user.id}>
