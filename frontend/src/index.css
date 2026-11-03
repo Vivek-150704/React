@@ -238,3 +238,43 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .search-suggestion small { font-size:10px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .search-no-suggestions { padding:14px; color:var(--muted); font-size:12px; }
 @media (max-width:650px) { .search-suggestion { grid-template-columns:1fr auto; } .search-suggestion span:nth-child(2) { display:none; } }
+
+/* Search suggestions are a vertical list: one full-width result per row. */
+.search-suggestions {
+  display: flex;
+  flex-direction: column;
+}
+.search-suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-height: 66px;
+}
+.search-suggestion span {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.search-suggestion span:nth-child(2) {
+  justify-content: flex-start;
+}
+.search-suggestion span:nth-child(2) strong {
+  font-weight: 500;
+}
+.search-suggestion .suggestion-status {
+  align-self: flex-start;
+}
+@media (max-width:650px) {
+  .search-suggestion span {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .search-suggestion span:nth-child(2) {
+    display: flex !important;
+  }
+}
