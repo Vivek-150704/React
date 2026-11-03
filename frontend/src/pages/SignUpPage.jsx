@@ -48,7 +48,7 @@ export function SignUpPage({ onSignIn, }) {
         }
     };
     return (<main className="signup-page">
-      <section className="signup-card">
+      <section className={`signup-card${submitted ? " signup-card-submitted" : ""}`}>
         {submitted ? <div className="signup-heading"><span className="eyebrow red">REGISTRATION RECEIVED</span><h1>Registration submitted successfully.</h1><p>Your account is awaiting administrator approval. You will be able to sign in once an administrator reviews your request.</p><Button onClick={() => onSignIn("Your account is awaiting administrator approval. You will be able to sign in after your registration is approved.")}>Return to Sign In</Button></div> : <>
         <div className="signup-brand">
           <div className="brand-mark">M</div>
