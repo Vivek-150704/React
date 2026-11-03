@@ -400,7 +400,7 @@ export function ReviewModal({
       <div className="modal-body review-form">
         <div className="review-record">
           <div><FileText/><span>Fine ID<strong>{fine.fineId}</strong></span></div>
-          <div><CircleDollarSign/><span>Fine amount<strong>{exactMoney(fine.fineAmount)} {fine.currencyCode}</strong></span></div>
+          <div><CircleDollarSign/><span>Fine amount<strong>{exactMoney(fine.fineAmount)}</strong></span></div>
           <div><Calendar/><span>Fine date<strong>{shortDate(fine.fineDate)}</strong></span></div>
           <div><Clock3/><span>Current status<strong>{fine.status}</strong></span></div>
         </div>
@@ -408,7 +408,7 @@ export function ReviewModal({
           <legend>Change fine status <span>*</span></legend>
           <p>Select the status to apply to this fine.</p>
           <div className="decision-options">
-            {["Pending", "Valid", "Invalid"].map((status) => (
+            {["Valid", "Invalid"].map((status) => (
               <label key={status} className={decision === status ? "selected " + status.toLowerCase() : ""}>
                 <input type="radio" name="fine-status" value={status} checked={decision === status} onChange={(e) => setDecision(e.target.value)}/>
                 <span><strong>{status}</strong><small>{status === "Pending" ? "Return the fine to the review queue." : status === "Valid" ? "Confirm this fine is correct." : "Mark this fine as incorrect."}</small></span>
