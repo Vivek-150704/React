@@ -9,6 +9,10 @@ from app.models.user import User
 router = APIRouter(prefix="/api/users", tags=["User Management"])
 
 
+class UserRoleUpdateRequest(BaseModel):
+    role: str = Field(pattern="^(Viewer|Super User|Admin)$")
+
+
 class AdminCreateRequest(BaseModel):
     fullName: str = Field(min_length=2, max_length=200)
     email: EmailStr
@@ -31,6 +35,28 @@ def create_admin(request: AdminCreateRequest, current_user: User = Depends(requi
     db.commit()
     db.refresh(admin)
     return {"id": admin.user_id, "fullName": admin.full_name, "email": admin.email, "role": admin.role, "status": admin.status}
+
+
+@router.patch("/{user_id}/role")
+def update_user_role(
+    user_id: int,
+    request: UserRoleUpdateRequest,
+    current_user: User = Depends(require_roles("Admin")),
+    db: Session = Depends(get_db),
+):
+    if user_id == current_user.user_id:
+        raise HTTPException(status_code=400, detail="cannot-change-own-role")
+    target = db.query(User).filter(User.user_id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="user-not-found")
+    if target.role == "Admin" and request.role != "Admin":
+        active_admins = db.query(User).filter(User.role == "Admin", User.status == "Approved").count()
+        if active_admins <= 1:
+            raise HTTPException(status_code=409, detail="cannot-demote-last-admin")
+    target.role = request.role
+    db.commit()
+    db.refresh(target)
+    return {"id": target.user_id, "fullName": target.full_name, "email": target.email, "role": target.role, "status": target.status}
 
 
 @router.delete("/{user_id}")
