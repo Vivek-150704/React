@@ -150,3 +150,63 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .main-table td:last-child { align-items:flex-start }
   .main-table td .row-actions { justify-content:flex-start }
 }
+
+
+/* MARS usability refinements */
+.all-records-scroll {
+  max-height: calc(100vh - 330px);
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.all-records-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #f3f5f7;
+  box-shadow: 0 1px 0 var(--border);
+}
+.main-table .amount-center,
+.main-table th.amount-center,
+.main-table td.amount-center {
+  text-align: center !important;
+  font-variant-numeric: tabular-nums;
+}
+.main-table .date-cell {
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.chart-grid .chart-card:last-child {
+  grid-column: 1 / -1;
+}
+.chart-grid .chart-card:last-child .chart,
+.chart-grid .chart-card:last-child .chart-tall {
+  height: 340px;
+}
+.review-modal { width: min(100%, 680px); }
+.review-modal .modal-body { display: grid; gap: 14px; }
+.review-modal .review-record { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.review-modal .decision { margin: 2px 0; min-width: 0; }
+.review-modal .decision-options { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.review-modal .decision label { align-items: flex-start; min-width: 0; }
+.review-modal .decision label > span { min-width: 0; }
+.review-modal .comment-field textarea { min-height: 100px; }
+.user-management-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin:4px 0 12px; }
+.user-management-heading h3,.admin-create-form h3 { margin:0; font-size:14px; display:flex; align-items:center; gap:7px; }
+.user-management-heading p { margin:4px 0 0; color:var(--muted); font-size:11px; }
+.admin-create-form { border:1px solid var(--border); border-radius:9px; padding:14px; margin:12px 0 20px; }
+.admin-create-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:12px; }
+.admin-create-fields input { width:100%; min-width:0; height:38px; border:1px solid #d0d5dd; border-radius:7px; padding:0 10px; }
+.admin-create-actions { display:flex; justify-content:flex-end; margin-top:12px; }
+.user-list-table { max-height:42vh; overflow:auto; }
+.user-list-table thead th { position:sticky; top:0; z-index:2; background:#f9fafb; }
+.user-list-table table { min-width:700px; width:100%; border-collapse:collapse; }
+.user-list-table th,.user-list-table td { padding:9px 10px; text-align:left; border-bottom:1px solid var(--border); font-size:11px; }
+.muted-note { color:var(--muted); font-size:10px; }
+@media (max-width:800px) {
+  .all-records-scroll { max-height:calc(100vh - 390px); }
+  .chart-grid .chart-card:last-child { grid-column:auto; }
+  .admin-create-fields { grid-template-columns:1fr; }
+  .review-modal .decision-options { grid-template-columns:1fr; }
+  .review-modal .review-record { grid-template-columns:1fr 1fr; }
+}
