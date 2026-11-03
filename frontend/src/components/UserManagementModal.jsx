@@ -66,7 +66,7 @@ export function UserManagementModal({ currentUser, onClose }) {
         <thead><tr><th>Name</th><th>Email</th><th>Requested role</th><th>Registered</th><th>Decision</th></tr></thead>
         <tbody>{requests.filter(r => r.status === "Pending Approval").map(request => <tr key={request.id}>
           <td>{request.fullName}</td><td>{request.email}</td><td>{request.requestedRole}</td><td>{request.registeredAt ? new Date(request.registeredAt).toLocaleDateString() : "—"}</td>
-          <td><div className="registration-actions"><select aria-label="Assigned role" value={assignedRoles[request.id] || "Viewer"} onChange={e => setAssignedRoles({...assignedRoles, [request.id]:e.target.value})}><option>Viewer</option><option>Super User</option><option>Admin</option></select><Button onClick={() => decideRequest(request, "approve")}>Approve</Button><Button variant="danger" onClick={() => decideRequest(request, "reject")}>Reject</Button></div></td>
+          <td><div className="registration-actions"><select aria-label="Assigned role" value={assignedRoles[request.id] || "Viewer"} onChange={e => setAssignedRoles({...assignedRoles, [request.id]:e.target.value})}><option>Viewer</option><option>Super User</option></select><Button onClick={() => decideRequest(request, "approve")}>Approve</Button><Button variant="danger" onClick={() => decideRequest(request, "reject")}>Reject</Button></div></td>
         </tr>)}</tbody>
       </table></div>
       <div className="user-management-heading"><div><h3>Existing users</h3><p>{users.length} account(s)</p></div></div>
