@@ -49,7 +49,6 @@ export function DashboardPage({
   const {
     dashboardFilters,
     setDashboardFilters,
-    setFinesFilters,
   } = useAppContext();
 
   const filters = dashboardFilters;
@@ -97,14 +96,12 @@ export function DashboardPage({
 
   const applyFilters = () => {
     setDashboardFilters({ ...draftFilters });
-    setFinesFilters({ ...draftFilters });
   };
 
   const resetFilters = () => {
     setDraftFilters(defaults);
 
     setDashboardFilters(defaults);
-    setFinesFilters(defaults);
 
     setDatePreset("12");
   };
