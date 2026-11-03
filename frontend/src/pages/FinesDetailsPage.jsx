@@ -82,7 +82,7 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
         <label className="field"><span>From date</span><input type="date" value={draftFilters.fromDate ?? ""} onChange={(e) => update({ fromDate: e.target.value || undefined })}/></label>
         <label className="field"><span>To date</span><input type="date" value={draftFilters.toDate ?? ""} onChange={(e) => update({ toDate: e.target.value || undefined })}/></label>
         <Select label="Status" value={draftFilters.status ?? ""} onChange={(e) => update({ status: e.target.value || undefined })}>
-          <option value="">All statuses</option>{statuses.map((status) => <option key={status} value={status}>{status}</option>}
+          <option value="">All statuses</option>{statuses.map((status) => <option key={status} value={status}>{status}</option>)}
         </Select>
         <Select label="Customer" value={draftFilters.customerId ?? ""} onChange={(e) => update({ customerId: e.target.value || undefined })}>
           <option value="">All customers</option>{customers.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
