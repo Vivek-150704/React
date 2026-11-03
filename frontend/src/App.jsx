@@ -29,99 +29,67 @@ export default function App() {
     authService.getCurrentUser()
   );
 
-  const [authPage, setAuthPage] =
-    useState("login");
-
-  const [authNotice, setAuthNotice] =
-    useState("");
-
-  const [page, setPage] =
-    useState("dashboard");
-
-  const [records, setRecords] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [navFilters, setNavFilters] =
-    useState({});
+  const [authPage, setAuthPage] = useState("login");
+  const [authNotice, setAuthNotice] = useState("");
+  const [page, setPage] = useState("dashboard");
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [navFilters, setNavFilters] = useState({});
 
   const {
     selectedFine,
     setSelectedFine,
-    finesFilters,
     setFinesFilters,
   } = useAppContext();
 
-  const [history, setHistory] =
-    useState([]);
+  const [history, setHistory] = useState([]);
+  const [reviewing, setReviewing] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  const [reviewing, setReviewing] =
-    useState(null);
-
-  const [toast, setToast] =
-    useState(null);
-
+  // Load one unfiltered source dataset. Each page applies its own filters,
+  // so Fines Details filters cannot accidentally hide dashboard records.
   useEffect(() => {
     let active = true;
 
     if (!user) {
       setRecords([]);
       setLoading(false);
-      return;
+      return undefined;
     }
 
     setLoading(true);
 
     finesService
-      .list(finesFilters)
+      .list({})
       .then((data) => {
-        if (active) {
-          setRecords(data);
-        }
+        if (active) setRecords(data);
       })
       .catch((error) => {
-        console.error(
-          "Fines loading error:",
-          error
-        );
-
+        console.error("Fines loading error:", error);
         if (active) {
           setToast({
-            message:
-              "Unable to load fine records. Please try again.",
+            message: "Unable to load fine records. Please try again.",
             type: "error",
           });
         }
       })
       .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [user, finesFilters]);
-
+  }, [user]);
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast) return undefined;
 
-    const timer = setTimeout(() => {
-      setToast(null);
-    }, 4000);
-
+    const timer = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
 
-
-  const openFine = async (
-    fine,
-    review = false
-  ) => {
+  const openFine = async (fine, review = false) => {
     setSelectedFine(fine);
     try {
       setHistory(await finesService.reviews(fine.fineId));
@@ -130,110 +98,54 @@ export default function App() {
       setHistory([]);
     }
 
-    if (
-      review &&
-      user &&
-      can(
-        user.role,
-        "fine:review"
-      )
-    ) {
+    if (review && user && can(user.role, "fine:review")) {
       setReviewing(fine);
     }
   };
 
-  const saveReview = async (
-    request
-  ) => {
+  const saveReview = async (request) => {
     if (!reviewing) return;
 
-    if (
-      !user ||
-      !can(
-        user.role,
-        "fine:review"
-      )
-    ) {
-      throw new Error(
-        "unauthorized"
-      );
+    if (!user || !can(user.role, "fine:review")) {
+      throw new Error("unauthorized");
     }
 
-    const updated =
-      await finesService.review(
-        reviewing.fineId,
-        request
-      );
+    const updated = await finesService.review(reviewing.fineId, request);
 
     setRecords((all) =>
       all.map((fine) =>
-        fine.fineId ===
-        updated.fineId
-          ? updated
-          : fine
+        fine.fineId === updated.fineId ? updated : fine
       )
     );
 
     setSelectedFine(updated);
-
     setReviewing(null);
-
-    setToast({
-      message:
-        "Fine review saved successfully.",
-    });
+    setToast({ message: "Fine review saved successfully." });
   };
 
-  const navigateFines = (
-    filters
-  ) => {
+  const navigateFines = (filters) => {
     setNavFilters(filters);
     setFinesFilters(filters);
     setPage("fines");
   };
 
-
-  const handleLogout =
-    () => {
-      authService.signOut();
-
-      setUser(null);
-
-      setRecords([]);
-
-      setPage(
-        "dashboard"
-      );
-
-      setSelectedFine(
-        null
-      );
-
-      setHistory([]);
-
-      setReviewing(
-        null
-      );
-    };
+  const handleLogout = () => {
+    authService.signOut();
+    setUser(null);
+    setRecords([]);
+    setPage("dashboard");
+    setSelectedFine(null);
+    setHistory([]);
+    setReviewing(null);
+  };
 
   if (!user) {
-    if (
-      authPage ===
-      "signup"
-    ) {
+    if (authPage === "signup") {
       return (
         <SignUpPage
-          onSignIn={(
-            message
-          ) => {
-            setAuthNotice(
-              message ??
-                ""
-            );
-
-            setAuthPage(
-              "login"
-            );
+          onSignIn={(message) => {
+            setAuthNotice(message ?? "");
+            setAuthPage("login");
           }}
         />
       );
@@ -241,21 +153,12 @@ export default function App() {
 
     return (
       <LoginPage
-        notice={
-          authNotice
-        }
+        notice={authNotice}
         onSignUp={() => {
-          setAuthNotice(
-            ""
-          );
-
-          setAuthPage(
-            "signup"
-          );
+          setAuthNotice("");
+          setAuthPage("signup");
         }}
-        onLogin={
-          setUser
-        }
+        onLogin={setUser}
       />
     );
   }
@@ -264,98 +167,50 @@ export default function App() {
     <Layout
       page={page}
       user={user}
-      onLogout={
-        handleLogout
-      }
-      onNavigate={
-        setPage
-      }
+      onLogout={handleLogout}
+      onNavigate={setPage}
     >
-      {loading &&
-      !records.length ? (
+      {loading && !records.length ? (
         <LoadingPage />
-      ) : page ===
-        "dashboard" ? (
+      ) : page === "dashboard" ? (
         <DashboardPage
-          records={
-            records
-          }
-          onNavigateFines={
-            navigateFines
-          }
+          records={records}
+          onNavigateFines={navigateFines}
         />
       ) : (
         <FinesDetailsPage
-          records={
-            records
-          }
-          role={
-            user.role
-          }
-          initialFilters={
-            navFilters
-          }
-          onOpen={
-            openFine
-          }
+          records={records}
+          role={user.role}
+          initialFilters={navFilters}
+          onOpen={openFine}
         />
       )}
 
       {selectedFine && (
         <FineDrawer
-          fine={
-            selectedFine
-          }
-          role={
-            user.role
-          }
-          history={
-            history
-          }
-          onClose={() =>
-            setSelectedFine(
-              null
-            )
-          }
-          onReview={() =>
-            setReviewing(
-              selectedFine
-            )
-          }
+          fine={selectedFine}
+          role={user.role}
+          history={history}
+          onClose={() => setSelectedFine(null)}
+          onReview={() => setReviewing(selectedFine)}
         />
       )}
 
       {reviewing && (
         <ReviewModal
-          fine={
-            reviewing
-          }
-          role={
-            user.role
-          }
-          onClose={() =>
-            setReviewing(
-              null
-            )
-          }
-          onSave={
-            saveReview
-          }
+          fine={reviewing}
+          role={user.role}
+          onClose={() => setReviewing(null)}
+          onSave={saveReview}
         />
       )}
-
 
       {toast && (
         <Toast
           {...toast}
-          onClose={() =>
-            setToast(
-              null
-            )
-          }
+          onClose={() => setToast(null)}
         />
       )}
     </Layout>
   );
 }
-
