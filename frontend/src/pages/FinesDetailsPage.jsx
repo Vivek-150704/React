@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, FilterX, MoreHorizontal } from "lucide-react";
 import { Button, Card, EmptyState, SearchField, Select, StatusBadge } from "../components/ui.jsx";
-import { exactMoney, shortDate } from "../utils/fines.js";
+import { exactMoney, filterFines, shortDate } from "../utils/fines.js";
 import { useAppContext } from "../context/AppContext.jsx";
 
 const emptyFilters = { search: "", status: undefined, customerId: undefined, reasons: [], fromDate: "", toDate: "" };
@@ -12,13 +12,17 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
   const [sort, setSort] = useState({ field: "fineDate", direction: "desc" });
   const customers = Array.from(new Map(records.map((f) => [f.customerId, f.customerName])));
   const reasons = [...new Set(records.map((f) => f.reasonCategory).filter(Boolean))].sort();
-  const filtered = useMemo(() => [...records].sort((a, b) => {
+
+  // Render the last applied filters, not unsubmitted draft selections.
+  const filtered = useMemo(() => filterFines(records, finesFilters).sort((a, b) => {
     const result = sort.field === "fineAmount"
       ? Number(a.fineAmount) - Number(b.fineAmount)
       : String(a.fineDate ?? "").localeCompare(String(b.fineDate ?? ""));
     return sort.direction === "asc" ? result : -result;
-  }), [records, sort]);
+  }), [records, finesFilters, sort]);
+
   const update = (partial) => setDraftFilters((current) => ({ ...current, ...partial }));
+  const applyFilters = () => setFinesFilters({ ...draftFilters });
   const clearFilters = () => {
     setDraftFilters(emptyFilters);
     setFinesFilters(emptyFilters);
@@ -46,7 +50,7 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
         <Select label="Fine reason" value={draftFilters.reasons?.[0] ?? ""} onChange={(e) => update({ reasons: e.target.value ? [e.target.value] : [] })}>
           <option value="">All reasons</option>{reasons.map((reason) => <option key={reason}>{reason}</option>)}
         </Select>
-        <Button onClick={() => setFinesFilters({ ...draftFilters })}>Apply Filters</Button>
+        <Button onClick={applyFilters}>Apply Filters</Button>
         <Button variant="ghost" onClick={clearFilters}><FilterX size={16}/> Clear all</Button>
       </div>
     </Card>
