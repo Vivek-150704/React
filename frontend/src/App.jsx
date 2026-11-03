@@ -118,8 +118,10 @@ export default function App() {
       )
     );
 
-    setSelectedFine(updated);
+    // Close both the review dialog and the fine drawer after a successful save.
     setReviewing(null);
+    setSelectedFine(null);
+    setHistory([]);
     setToast({ message: "Fine review saved successfully." });
   };
 
