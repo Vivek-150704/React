@@ -65,6 +65,14 @@ export const authService = {
     });
   },
 
+  async updateUserRole(id, role) {
+    return apiRequest(`/api/users/${encodeURIComponent(id)}/role`, {
+      method: "PATCH",
+      token: this.getToken(),
+      body: { role },
+    });
+  },
+
   async deleteUser(id) {
     return apiRequest(`/api/users/${encodeURIComponent(id)}`, {
       method: "DELETE",
