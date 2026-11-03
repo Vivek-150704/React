@@ -11,8 +11,25 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
   const [draftFilters, setDraftFilters] = useState(() => ({ ...emptyFilters, ...initialFilters, ...finesFilters }));
   const [sort, setSort] = useState({ field: "fineDate", direction: "desc" });
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const customers = Array.from(new Map(records.map((f) => [f.customerId, f.customerName])));
-  const reasons = [...new Set(records.map((f) => f.reasonCategory).filter(Boolean))].sort();
+  // Build every filter option from the live records returned by the API.
+  // Keep the option lists within the selected date window, but independent
+  // of the other selected filters so users can change between them.
+  const optionRecords = useMemo(
+    () => filterFines(records, {
+      fromDate: draftFilters.fromDate,
+      toDate: draftFilters.toDate,
+      status: undefined,
+      customerId: undefined,
+      reasons: [],
+      search: "",
+    }),
+    [records, draftFilters.fromDate, draftFilters.toDate]
+  );
+  const statuses = [...new Set(optionRecords.map((fine) => fine.status).filter(Boolean))].sort();
+  const customers = Array.from(
+    new Map(optionRecords.filter((fine) => fine.customerId).map((fine) => [fine.customerId, fine.customerName]))
+  ).sort((a, b) => String(a[1] || a[0]).localeCompare(String(b[1] || b[0])));
+  const reasons = [...new Set(optionRecords.map((fine) => fine.reasonCategory).filter(Boolean))].sort();
 
   // Render the last applied filters, not unsubmitted draft selections.
   const filtered = useMemo(() => filterFines(records, finesFilters).sort((a, b) => {
@@ -65,7 +82,7 @@ export function FinesDetailsPage({ records, role, initialFilters, onOpen }) {
         <label className="field"><span>From date</span><input type="date" value={draftFilters.fromDate ?? ""} onChange={(e) => update({ fromDate: e.target.value || undefined })}/></label>
         <label className="field"><span>To date</span><input type="date" value={draftFilters.toDate ?? ""} onChange={(e) => update({ toDate: e.target.value || undefined })}/></label>
         <Select label="Status" value={draftFilters.status ?? ""} onChange={(e) => update({ status: e.target.value || undefined })}>
-          <option value="">All statuses</option><option>Valid</option><option>Invalid</option><option>Pending</option>
+          <option value="">All statuses</option>{statuses.map((status) => <option key={status} value={status}>{status}</option>}
         </Select>
         <Select label="Customer" value={draftFilters.customerId ?? ""} onChange={(e) => update({ customerId: e.target.value || undefined })}>
           <option value="">All customers</option>{customers.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
