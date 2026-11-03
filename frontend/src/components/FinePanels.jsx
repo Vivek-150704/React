@@ -396,12 +396,39 @@ export function ReviewModal({
   };
 
   return (
-    <Modal
-      title="Review Fine Status"
-      onClose={onClose}
-      className="review-modal"
-    >
-      {/* Keep existing JSX here exactly as you have it */}
+    <Modal title="Review Fine Status" onClose={onClose} className="review-modal">
+      <div className="modal-body review-form">
+        <div className="review-record">
+          <div><FileText/><span>Fine ID<strong>{fine.fineId}</strong></span></div>
+          <div><CircleDollarSign/><span>Fine amount<strong>{exactMoney(fine.fineAmount)} {fine.currencyCode}</strong></span></div>
+          <div><Calendar/><span>Fine date<strong>{shortDate(fine.fineDate)}</strong></span></div>
+          <div><Clock3/><span>Current status<strong>{fine.status}</strong></span></div>
+        </div>
+        <fieldset className="decision">
+          <legend>Change fine status <span>*</span></legend>
+          <p>Select the status to apply to this fine.</p>
+          <div className="decision-options">
+            {["Pending", "Valid", "Invalid"].map((status) => (
+              <label key={status} className={decision === status ? "selected " + status.toLowerCase() : ""}>
+                <input type="radio" name="fine-status" value={status} checked={decision === status} onChange={(e) => setDecision(e.target.value)}/>
+                <span><strong>{status}</strong><small>{status === "Pending" ? "Return the fine to the review queue." : status === "Valid" ? "Confirm this fine is correct." : "Mark this fine as incorrect."}</small></span>
+              </label>
+            ))}
+          </div>
+          {errors.decision && <small className="field-error">{errors.decision}</small>}
+        </fieldset>
+        <label className="comment-field">
+          <span>Review comment <b>*</b></span>
+          <textarea value={comment} maxLength={1000} onChange={(e) => setComment(e.target.value)} placeholder="Explain why you are changing this fine status…"/>
+          <div><span>{errors.comment || "A comment is required for audit history."}</span><span>{comment.length}/1000</span></div>
+        </label>
+        {errors.permission && <div className="alert error">{errors.permission}</div>}
+        {apiError && <div className="alert error">{apiError}</div>}
+        <div className="modal-actions">
+          <Button variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={submit} disabled={saving || role === "Viewer"}>{saving ? "Saving…" : "Save review"}</Button>
+        </div>
+      </div>
     </Modal>
   );
 }
