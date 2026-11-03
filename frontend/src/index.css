@@ -278,3 +278,35 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     display: flex !important;
   }
 }
+
+
+/* Registration confirmation: balanced card padding and tighter content spacing. */
+.signup-card-submitted {
+  width: min(100%, 760px);
+  padding: 44px 48px;
+}
+.signup-card-submitted .signup-heading {
+  margin: 0;
+}
+.signup-card-submitted .signup-heading h1 {
+  max-width: 620px;
+  margin: 12px 0 14px;
+  line-height: 1.3;
+}
+.signup-card-submitted .signup-heading p {
+  max-width: 650px;
+  margin: 0;
+  line-height: 1.65;
+}
+.signup-card-submitted .signup-heading .btn {
+  margin-top: 20px;
+}
+@media (max-width: 600px) {
+  .signup-card-submitted {
+    width: 100%;
+    padding: 28px 22px;
+  }
+  .signup-card-submitted .signup-heading h1 {
+    font-size: 25px;
+  }
+}
