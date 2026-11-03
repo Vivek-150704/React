@@ -53,6 +53,25 @@ export const authService = {
     );
   },
 
+  async users() {
+    return apiRequest("/api/users", { token: this.getToken() });
+  },
+
+  async createAdmin(fullName, email, password) {
+    return apiRequest("/api/users/admins", {
+      method: "POST",
+      token: this.getToken(),
+      body: { fullName: fullName.trim(), email: email.trim().toLowerCase(), password },
+    });
+  },
+
+  async deleteUser(id) {
+    return apiRequest(`/api/users/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      token: this.getToken(),
+    });
+  },
+
   getToken() {
     return localStorage.getItem(TOKEN_KEY);
   },
